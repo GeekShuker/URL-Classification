@@ -1,4 +1,9 @@
-﻿.idea/
-.vscode/
 __pycache__/
+.pytest_cache/
 *.pyc
+*.pyo
+*.pyd
+*.joblib
+.idea/
+artifacts/
+.DS_Store
