@@ -4,10 +4,28 @@ Phishing URL detector using lexical features only. The project trains CPU-only m
 
 ## Setup
 ```bash
+# Windows (PowerShell)
 python -m venv .venv
-source .venv/bin/activate
+.\.venv\Scripts\Activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+```
+```bash
+# Windows (CMD)
+python -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
+```bash
+# Linux / macOS
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 
 ## Training
 All commands default to `balanced_urls.csv`, `url` column for URLs, and `label` column for labels.

@@ -67,7 +67,6 @@ def build_rfe_xgb(
         random_state=random_state,
         eval_metric="logloss",
         tree_method="hist",
-        use_label_encoder=False,
     )
     model = Pipeline(
         [

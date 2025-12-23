@@ -7,6 +7,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime
+from datetime import datetime, timezone
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -168,7 +169,7 @@ def main():
         "max_fpr": args.max_fpr,
         "val_metrics": val_metrics,
         "test_metrics": test_metrics,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "feature_columns": feature_columns,
         "splits": {
             "train": len(X_train),

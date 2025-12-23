@@ -75,7 +75,8 @@ def extract_lexical_features(url: str) -> Dict[str, float]:
 
     has_https = 1.0 if scheme.lower() == "https" else 0.0
     has_ip_host = 1.0 if _IPv4_RE.match(host) else 0.0
-    port_present = 1.0 if parsed.port else 0.0
+    netloc = parsed.netloc or ""
+    port_present = 1.0 if ":" in netloc else 0.0
 
     subdomain_count = float(max(host.count(".") - 1, 0)) if host else 0.0
 
