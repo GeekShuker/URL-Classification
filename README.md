@@ -57,10 +57,17 @@ Predict from file:
 python predict.py --modeldir artifacts/en_bag --input urls.txt
 ```
 
-## Evaluation
+## Evaluation EN_KNN
 ```bash
-python evaluate.py --modeldir artifacts/en_bag --data balanced_urls.csv
+python evaluate.py --modeldir artifacts/en_knn --data newDataSetKaggle.csv
 ```
-
+## Evaluation RFE_XGB
+```bash
+python evaluate.py --modeldir artifacts/rfe_xgb --data newDataSetKaggle.csv
+```
+## Evaluation EN_BAG
+```bash
+python evaluate.py --modeldir artifacts/en_bag --data newDataSetKaggle.csv
+```
 ## Threshold tuning with FPR constraint
 Validation probabilities are scanned to find the decision threshold that achieves the highest recall while keeping the false positive rate at or below the provided maximum (default 0.01). This threshold is then fixed and reused for test evaluation and downstream predictions.

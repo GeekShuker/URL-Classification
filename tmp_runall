@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+echo "==> Using repo at: $PWD"
+
+# ----------------
+# flags / defaults
+# ----------------
+SKIP_TRAIN="${SKIP_TRAIN:-0}"                  # 1 = skip training, 0 = run training
+TRAIN_DATA="${TRAIN_DATA:-balanced_urls.csv}"
+TRAIN_URL_COL="${TRAIN_URL_COL:-url}"
+TRAIN_LABEL_COL="${TRAIN_LABEL_COL:-label}"
+
+EXT_DATA="${EXT_DATA:-phishing_simple.csv}"    # external dataset file
+EXT_SAMPLE="${EXT_SAMPLE:-reports/tmp_external_sample.csv}"
+SAMPLE_N="${SAMPLE_N:-0}"                 # 0 => full dataset
+SEED="${SEED:-42}"
+URL_COL="${URL_COL:-url}"
+LABEL_COL="${LABEL_COL:-label}"
+SAMPLE_MODE="${SAMPLE_MODE:-stratified}"       # stratified | balanced
+
+RESULTS_CSV="${RESULTS_CSV:-reports/eval_runs.csv}"
+
+# -------------
+# venv handling
+# -------------
+if [[ -d ".venv" ]]; then
+  echo "==> Using existing virtual environment (.venv)"
+else
+  echo "==> Creating virtual environment (.venv)"
+  python -m venv .venv
+fi
+
+# Prefer running via the venv python directly (avoids activate/uname issues on Windows)
+if [[ -f ".venv/Scripts/python.exe" ]]; then
+  PYTHON=".venv/Scripts/python.exe"
+else
+  PYTHON=".venv/bin/python"
+fi
+
+echo "==> Python: $PYTHON"
+
+echo "==> Installing requirements"
+"$PYTHON" -m pip install --upgrade pip
+"$PYTHON" -m pip install -r requirements.txt
+
+# ----------
+# tests
+# ----------
+echo "==> Running tests"
+"$PYTHON" -m pytest -q
+
+# ----------
+# training
+# ----------
+if [[ "$SKIP_TRAIN" == "1" ]]; then
+  echo "==> SKIP_TRAIN=1, skipping training (using existing artifacts/*)"
+else
+  if [[ ! -f "$TRAIN_DATA" ]]; then
+    echo "==> ERROR: training dataset not found: $TRAIN_DATA"
+    exit 1
+  fi
+
+  echo "==> Training en_bag on $TRAIN_DATA"
+  "$PYTHON" train.py --model en_bag --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_bag
+
+  echo "==> Training en_knn on $TRAIN_DATA"
+  "$PYTHON" train.py --model en_knn --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_knn
+
+  echo "==> Training rfe_xgb on $TRAIN_DATA"
+  "$PYTHON" train.py --model rfe_xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rfe_xgb
+fi
+
+# ----------
+# evaluation (EXTERNAL ONLY)
+# ----------
+"$PYTHON" - <<'PY'
+from pathlib import Path
+Path("reports").mkdir(parents=True, exist_ok=True)
+PY
+
+if [[ ! -f "$EXT_DATA" ]]; then
+  echo "==> ERROR: external dataset not found: $EXT_DATA"
+  exit 1
+fi
+
+export EXT_DATA EXT_SAMPLE SAMPLE_N SEED URL_COL LABEL_COL SAMPLE_MODE
+
+echo "==> Creating external subset: mode=$SAMPLE_MODE, out=$EXT_SAMPLE (n=$SAMPLE_N, seed=$SEED)"
+"$PYTHON" - <<'PY'
+import os
+import pandas as pd
+
+mode = os.environ.get("SAMPLE_MODE", "stratified").strip().lower()
+ext_data = os.environ["EXT_DATA"]
+out_path = os.environ["EXT_SAMPLE"]
+n = int(os.environ["SAMPLE_N"])
+seed = int(os.environ["SEED"])
+url_col = os.environ["URL_COL"]
+label_col = os.environ["LABEL_COL"]
+
+df = pd.read_csv(ext_data)
+if url_col not in df.columns or label_col not in df.columns:
+    raise SystemExit(f"Missing columns in {ext_data}. Need '{url_col}' and '{label_col}'. Columns: {list(df.columns)}")
+
+df = df.dropna(subset=[url_col, label_col]).reset_index(drop=True)
+
+# coerce label to int (0/1)
+try:
+    df[label_col] = df[label_col].astype(int)
+except Exception:
+    raise SystemExit(f"Label column '{label_col}' must be convertible to int (0/1).")
+
+if n == 0:
+    df.to_csv(out_path, index=False)
+    dist = (df[label_col].value_counts(normalize=True).sort_index()).to_dict()
+    print(f"Wrote FULL dataset ({len(df)}) to {out_path}")
+    print(f"Label dist: {dist}")
+    raise SystemExit(0)
+
+if n < 0:
+    raise SystemExit("SAMPLE_N must be >= 0")
+
+if n > len(df):
+    raise SystemExit(f"SAMPLE_N={n} is larger than dataset size {len(df)}")
+
+if mode == "balanced":
+    if n % 2 != 0:
+        raise SystemExit("SAMPLE_MODE=balanced requires SAMPLE_N to be even for exact 50/50.")
+    half = n // 2
+    df0 = df[df[label_col] == 0]
+    df1 = df[df[label_col] == 1]
+    if len(df0) < half or len(df1) < half:
+        raise SystemExit(
+            f"Not enough samples for 50/50 of size {n}. Need >= {half} of each class, got: "
+            f"class0={len(df0)}, class1={len(df1)}"
+        )
+    s0 = df0.sample(n=half, random_state=seed)
+    s1 = df1.sample(n=half, random_state=seed)
+    sample_df = pd.concat([s0, s1], axis=0).sample(frac=1.0, random_state=seed).reset_index(drop=True)
+
+elif mode == "stratified":
+    from sklearn.model_selection import StratifiedShuffleSplit
+    y = df[label_col]
+    sss = StratifiedShuffleSplit(n_splits=1, train_size=n, random_state=seed)
+    idx, _ = next(sss.split(df, y))
+    sample_df = df.iloc[idx].reset_index(drop=True)
+
+else:
+    raise SystemExit("SAMPLE_MODE must be 'stratified' or 'balanced'")
+
+sample_df.to_csv(out_path, index=False)
+
+orig_dist = (df[label_col].value_counts(normalize=True).sort_index()).to_dict()
+samp_dist = (sample_df[label_col].value_counts(normalize=True).sort_index()).to_dict()
+counts = (sample_df[label_col].value_counts().sort_index()).to_dict()
+print(f"Wrote {len(sample_df)} rows to {out_path}")
+print(f"Original label dist: {orig_dist}")
+print(f"Sample counts: {counts}")
+print(f"Sample   label dist: {samp_dist}")
+PY
+
+echo "==> Evaluating on external subset (all models, same data)"
+"$PYTHON" evaluate.py --modeldir artifacts/en_bag  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}"
+"$PYTHON" evaluate.py --modeldir artifacts/en_knn  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}"
+"$PYTHON" evaluate.py --modeldir artifacts/rfe_xgb --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.7775
+
+echo "==> Done. Results appended to: $RESULTS_CSV"

@@ -50,7 +50,7 @@ def build_en_knn(random_state: int, ks: List[int] | None = None, **kwargs):
 
 def build_rfe_xgb(
     random_state: int,
-    rfe_k: int = 30,
+    rfe_k: int = 20,
     n_estimators: int = 200,
     max_depth: int = 6,
     learning_rate: float = 0.1,

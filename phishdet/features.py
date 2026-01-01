@@ -123,3 +123,16 @@ def build_feature_df(urls: Iterable[str]) -> pd.DataFrame:
     records = [extract_lexical_features(u) for u in urls]
     df = pd.DataFrame.from_records(records)
     return df.fillna(0.0)
+
+def extract_url_features(urls: Iterable[str]) -> np.ndarray:
+    """
+    Public API for models / evaluation.
+    Returns a NumPy feature matrix in a stable column order.
+    """
+    df = build_feature_df(urls)
+
+    # IMPORTANT: keep column order stable
+    return df.to_numpy(dtype=float)
+
+
+

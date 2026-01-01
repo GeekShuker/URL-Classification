@@ -6,18 +6,17 @@ import argparse
 import json
 import time
 from pathlib import Path
-from datetime import datetime
 from datetime import datetime, timezone
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import average_precision_score, roc_auc_score
 
 from phishdet.features import build_feature_df
 from phishdet.models import build_en_bag, build_en_knn, build_rfe_xgb
 from phishdet.thresholding import find_threshold_max_recall_under_fpr
 from phishdet.metrics import compute_confusion, compute_metrics
 from phishdet.persistence import save_artifacts
-from sklearn.metrics import average_precision_score, roc_auc_score
 
 
 MODEL_BUILDERS = {
@@ -55,7 +54,7 @@ def parse_args():
     parser.add_argument("--knn-ks", default="3,5,7,9", help="Comma-separated k values")
 
     # RFE + XGB
-    parser.add_argument("--rfe-k", type=int, default=30)
+    parser.add_argument("--rfe-k", type=int, default=20)
     parser.add_argument("--xgb-n-estimators", type=int, default=200)
     parser.add_argument("--xgb-max-depth", type=int, default=6)
     parser.add_argument("--xgb-learning-rate", type=float, default=0.1)
@@ -90,6 +89,20 @@ def build_model(args):
     raise ValueError(f"Unknown model {args.model}")
 
 
+def _safe_auc(y_true, y_score):
+    try:
+        return float(roc_auc_score(y_true, y_score))
+    except Exception:
+        return 0.0
+
+
+def _safe_pr_auc(y_true, y_score):
+    try:
+        return float(average_precision_score(y_true, y_score))
+    except Exception:
+        return 0.0
+
+
 def main():
     total_start = time.perf_counter()
     args = parse_args()
@@ -99,13 +112,16 @@ def main():
     df = pd.read_csv(data_path, usecols=[args.url_col, args.label_col])
     if args.sample_size and args.sample_size > 0 and len(df) > args.sample_size:
         df = df.sample(n=args.sample_size, random_state=args.random_state).reset_index(drop=True)
+
     urls = df[args.url_col].astype(str).tolist()
     labels = (df[args.label_col].astype(int) != int(args.benign_value)).astype(int).values
 
     feature_start = time.perf_counter()
     features = build_feature_df(urls)
     feature_time = time.perf_counter() - feature_start
+
     feature_columns = list(features.columns)
+
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         features,
         labels,
@@ -135,31 +151,29 @@ def main():
     test_metrics = compute_metrics(y_test, test_proba, threshold)
     test_preds = (test_proba >= threshold).astype(int)
     tn, fp, fn, tp = compute_confusion(y_test, test_preds)
-    try:
-        roc_auc = float(roc_auc_score(y_test, test_proba))
-    except Exception:
-        roc_auc = 0.0
-    try:
-        pr_auc = float(average_precision_score(y_test, test_proba))
-    except Exception:
-        pr_auc = 0.0
 
+    roc_auc = _safe_auc(y_test, test_proba)
+    pr_auc = _safe_pr_auc(y_test, test_proba)
+
+    # RFE metadata: selected features + aligned top features
+    selected_features = None
     metadata_top_features = None
+
     if args.model == "rfe_xgb" and hasattr(model, "named_steps"):
         rfe_step = model.named_steps.get("rfe")
         xgb_step = model.named_steps.get("xgb")
         if rfe_step is not None and xgb_step is not None:
             support = getattr(rfe_step, "support_", None)
             importances = getattr(xgb_step, "feature_importances_", None)
-            if support is not None and importances is not None:
-                selected_features = [
-                    feature_columns[i] for i, flag in enumerate(support) if flag
-                ]
+
+            if support is not None:
+                selected_features = [feature_columns[i] for i, flag in enumerate(support) if flag]
+
+            # xgb importances correspond to the post-RFE feature space (len == len(selected_features))
+            if selected_features and importances is not None and len(importances) == len(selected_features):
                 pairs = list(zip(selected_features, importances))
-                pairs.sort(key=lambda x: x[1], reverse=True)
-                metadata_top_features = [
-                    [name, float(score)] for name, score in pairs[:20]
-                ]
+                pairs.sort(key=lambda x: float(x[1]), reverse=True)
+                metadata_top_features = [[name, float(score)] for name, score in pairs[:20]]
 
     total_time = time.perf_counter() - total_start
 
@@ -171,6 +185,7 @@ def main():
         "test_metrics": test_metrics,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "feature_columns": feature_columns,
+        "selected_features": selected_features,  # None unless rfe_xgb
         "splits": {
             "train": len(X_train),
             "val": len(X_val),
@@ -203,7 +218,18 @@ def main():
         metadata_dict=metadata,
     )
 
-    print(json.dumps({"val_metrics": val_metrics, "test_metrics": test_metrics, "threshold": threshold}, indent=2))
+    out = {
+        "val_metrics": val_metrics,
+        "test_metrics": test_metrics,
+        "test_confusion": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "test_auc": {"roc_auc": float(roc_auc), "pr_auc": float(pr_auc)},
+        "threshold": float(threshold),
+    }
+    print(json.dumps(out, indent=2))
+    print("\nConfusion Matrix (TEST) (Actual x Pred)")
+    print(f"{'':>12} {'Pred 0':>10} {'Pred 1':>10}")
+    print(f"{'Actual 0':>12} {int(tn):>10} {int(fp):>10}")
+    print(f"{'Actual 1':>12} {int(fn):>10} {int(tp):>10}")
 
 
 if __name__ == "__main__":
