@@ -21,8 +21,10 @@ SEED="${SEED:-42}"
 URL_COL="${URL_COL:-url}"
 LABEL_COL="${LABEL_COL:-label}"
 SAMPLE_MODE="${SAMPLE_MODE:-stratified}"       # stratified | balanced
+THRESHOLD="${THRESHOLD:-0.7775}"
+RFE_K="${RFE_K:-20}"
+RESULTS_CSV="${RESULTS_CSV:-reports/rfe_runs.csv}"
 
-RESULTS_CSV="${RESULTS_CSV:-reports/eval_runs.csv}"
 
 # -------------
 # venv handling
@@ -42,17 +44,6 @@ else
 fi
 
 echo "==> Python: $PYTHON"
-
-echo "==> Installing requirements"
-"$PYTHON" -m pip install --upgrade pip
-"$PYTHON" -m pip install -r requirements.txt
-
-# ----------
-# tests
-# ----------
-echo "==> Running tests"
-"$PYTHON" -m pytest -q
-
 # ----------
 # training
 # ----------
@@ -63,15 +54,8 @@ else
     echo "==> ERROR: training dataset not found: $TRAIN_DATA"
     exit 1
   fi
-
-  echo "==> Training en_bag on $TRAIN_DATA"
-  "$PYTHON" train.py --model en_bag --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_bag
-
-  echo "==> Training en_knn on $TRAIN_DATA"
-  "$PYTHON" train.py --model en_knn --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_knn
-
   echo "==> Training rfe_xgb on $TRAIN_DATA"
-  "$PYTHON" train.py --model rfe_xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rfe_xgb
+  "$PYTHON" train.py --model rfe_xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rfe_xgb --rfe-k "$RFE_K"
 fi
 
 # ----------
@@ -163,9 +147,12 @@ print(f"Sample counts: {counts}")
 print(f"Sample   label dist: {samp_dist}")
 PY
 
-echo "==> Evaluating on external subset (all models, same data)"
-"$PYTHON" evaluate.py --modeldir artifacts/en_bag  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}"
-"$PYTHON" evaluate.py --modeldir artifacts/en_knn  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}"
-"$PYTHON" evaluate.py --modeldir artifacts/rfe_xgb --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.7775
+echo "==> Evaluating on external subset (RFE model)"
+EVAL_ARGS=(evaluate.py --modeldir artifacts/rfe_xgb --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}")
 
+if [[ -n "${THRESHOLD}" ]]; then
+  EVAL_ARGS+=(--threshold "$THRESHOLD")
+fi
+
+"$PYTHON" "${EVAL_ARGS[@]}"
 echo "==> Done. Results appended to: $RESULTS_CSV"

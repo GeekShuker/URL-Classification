@@ -1,5 +1,9 @@
 [
   {
+    "model": "catboost",
+    "metadata_path": "artifacts/catboost/metadata.json"
+  },
+  {
     "model": "en_bag",
     "metadata_path": "artifacts/en_bag/metadata.json"
   },
@@ -8,7 +12,15 @@
     "metadata_path": "artifacts/en_knn/metadata.json"
   },
   {
+    "model": "rf",
+    "metadata_path": "artifacts/rf/metadata.json"
+  },
+  {
     "model": "rfe_xgb",
     "metadata_path": "artifacts/rfe_xgb/metadata.json"
+  },
+  {
+    "model": "xgb",
+    "metadata_path": "artifacts/xgb/metadata.json"
   }
 ]

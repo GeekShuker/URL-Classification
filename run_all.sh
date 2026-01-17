@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -14,6 +14,7 @@ TRAIN_DATA="${TRAIN_DATA:-balanced_urls.csv}"
 TRAIN_URL_COL="${TRAIN_URL_COL:-url}"
 TRAIN_LABEL_COL="${TRAIN_LABEL_COL:-label}"
 
+
 EXT_DATA="${EXT_DATA:-phishing_simple.csv}"    # external dataset file
 EXT_SAMPLE="${EXT_SAMPLE:-reports/tmp_external_sample.csv}"
 SAMPLE_N="${SAMPLE_N:-0}"                 # 0 => full dataset
@@ -21,29 +22,47 @@ SEED="${SEED:-42}"
 URL_COL="${URL_COL:-url}"
 LABEL_COL="${LABEL_COL:-label}"
 SAMPLE_MODE="${SAMPLE_MODE:-stratified}"       # stratified | balanced
-THRESHOLD="${THRESHOLD:-0.7775}"
-RFE_K="${RFE_K:-20}"
-RESULTS_CSV="${RESULTS_CSV:-reports/rfe_runs.csv}"
 
+RESULTS_CSV="${RESULTS_CSV:-reports/eval_runs.csv}"
+FIXED_THRESHOLD="${FIXED_THRESHOLD:-}"   # empty => auto threshold
 
-# -------------
-# venv handling
-# -------------
-if [[ -d ".venv" ]]; then
-  echo "==> Using existing virtual environment (.venv)"
-else
-  echo "==> Creating virtual environment (.venv)"
-  python -m venv .venv
+EXTRA_TRAIN_ARGS=()
+if [[ -n "${FIXED_THRESHOLD}" ]]; then
+  EXTRA_TRAIN_ARGS+=(--fixed-threshold "${FIXED_THRESHOLD}")
 fi
 
-# Prefer running via the venv python directly (avoids activate/uname issues on Windows)
-if [[ -f ".venv/Scripts/python.exe" ]]; then
-  PYTHON=".venv/Scripts/python.exe"
+# -----------------------
+# Python selection (docker-friendly)
+# -----------------------
+if [[ "${IN_DOCKER:-}" == "1" ]]; then
+  echo "==> IN_DOCKER=1, using system python"
+  PYTHON="python"
 else
-  PYTHON=".venv/bin/python"
+  # local run (Windows/Linux) – use venv if exists, otherwise system python
+  if [[ -f ".venv/Scripts/python.exe" ]]; then
+    PYTHON=".venv/Scripts/python.exe"
+  elif [[ -f ".venv/bin/python" ]]; then
+    PYTHON=".venv/bin/python"
+  else
+    PYTHON="python"
+  fi
 fi
 
 echo "==> Python: $PYTHON"
+
+# In Docker, dependencies are installed in the image (Dockerfile). Don't pip install here.
+if [[ "${IN_DOCKER:-}" != "1" ]]; then
+  echo "==> Installing requirements (local only)"
+  "$PYTHON" -m pip install --upgrade pip
+  "$PYTHON" -m pip install -r requirements.txt
+fi
+
+# ----------
+# tests
+# ----------
+echo "==> Running tests"
+"$PYTHON" -m pytest -q
+
 # ----------
 # training
 # ----------
@@ -54,8 +73,30 @@ else
     echo "==> ERROR: training dataset not found: $TRAIN_DATA"
     exit 1
   fi
+
+  echo "==> Training en_bag on $TRAIN_DATA"
+  "$PYTHON" train.py --model en_bag --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_bag "${EXTRA_TRAIN_ARGS[@]}"
+
+
+  echo "==> Training en_knn on $TRAIN_DATA"
+  "$PYTHON" train.py --model en_knn --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/en_knn "${EXTRA_TRAIN_ARGS[@]}"
+
+
   echo "==> Training rfe_xgb on $TRAIN_DATA"
-  "$PYTHON" train.py --model rfe_xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rfe_xgb --rfe-k "$RFE_K"
+  "$PYTHON" train.py --model rfe_xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rfe_xgb "${EXTRA_TRAIN_ARGS[@]}"
+
+
+  echo "==> Training rf on $TRAIN_DATA"
+  "$PYTHON" train.py --model rf --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/rf "${EXTRA_TRAIN_ARGS[@]}"
+
+
+  echo "==> Training xgb on $TRAIN_DATA"
+  "$PYTHON" train.py --model xgb --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/xgb "${EXTRA_TRAIN_ARGS[@]}"
+
+
+  echo "==> Training catboost on $TRAIN_DATA"
+  "$PYTHON" train.py --model catboost --data "$TRAIN_DATA" --url-col "$TRAIN_URL_COL" --label-col "$TRAIN_LABEL_COL" --outdir artifacts/catboost "${EXTRA_TRAIN_ARGS[@]}"
+
 fi
 
 # ----------
@@ -147,12 +188,12 @@ print(f"Sample counts: {counts}")
 print(f"Sample   label dist: {samp_dist}")
 PY
 
-echo "==> Evaluating on external subset (RFE model)"
-EVAL_ARGS=(evaluate.py --modeldir artifacts/rfe_xgb --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}")
+echo "==> Evaluating on external subset (all models, same data)"
+"$PYTHON" evaluate.py --modeldir artifacts/en_bag  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
+"$PYTHON" evaluate.py --modeldir artifacts/en_knn  --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
+"$PYTHON" evaluate.py --modeldir artifacts/rfe_xgb --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
+"$PYTHON" evaluate.py --modeldir artifacts/rf      --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
+"$PYTHON" evaluate.py --modeldir artifacts/xgb      --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
+"$PYTHON" evaluate.py --modeldir artifacts/catboost --data "$EXT_SAMPLE" --url-col "$URL_COL" --label-col "$LABEL_COL" --split external --out-csv "$RESULTS_CSV" --notes "external_${SAMPLE_MODE}" --threshold 0.55
 
-if [[ -n "${THRESHOLD}" ]]; then
-  EVAL_ARGS+=(--threshold "$THRESHOLD")
-fi
-
-"$PYTHON" "${EVAL_ARGS[@]}"
 echo "==> Done. Results appended to: $RESULTS_CSV"

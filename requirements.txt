@@ -3,6 +3,7 @@ pandas
 scikit-learn
 joblib
 xgboost
+catboost
 pytest
 matplotlib
 tabulate

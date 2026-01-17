@@ -17,11 +17,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 try:
     import pandas as pd
 except Exception:
     pd = None  # type: ignore
+
+try:
+    from matplotlib.patches import Circle
+    import matplotlib.patches as mpatches
+except Exception:
+    pass
 
 
 @dataclass
@@ -141,6 +148,225 @@ def plot_feature_importance(top_features: List[List[Any]], title: str, out_path:
     plt.barh(feats, vals)
     plt.title(title)
     plt.xlabel("Importance")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def plot_precision_recall_scatter(summary_rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Scatter plot of Precision vs Recall for all models."""
+    models = []
+    precisions = []
+    recalls = []
+    
+    for row in summary_rows:
+        try:
+            prec = float(row.get("precision", float("nan")))
+            rec = float(row.get("recall", float("nan")))
+            if not (np.isnan(prec) or np.isnan(rec)):
+                models.append(str(row["model"]))
+                precisions.append(prec)
+                recalls.append(rec)
+        except Exception:
+            continue
+    
+    if not models:
+        return
+    
+    plt.figure(figsize=(10, 8))
+    plt.scatter(recalls, precisions, s=100, alpha=0.6)
+    
+    # Add model labels
+    for i, model in enumerate(models):
+        plt.annotate(model, (recalls[i], precisions[i]), 
+                    xytext=(5, 5), textcoords='offset points', fontsize=8)
+    
+    plt.xlabel("Recall", fontsize=12)
+    plt.ylabel("Precision", fontsize=12)
+    plt.title("Precision vs Recall Trade-off", fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, 1.05)
+    plt.ylim(0, 1.05)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def plot_performance_vs_efficiency(summary_rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Scatter plot of Training Time vs ROC-AUC (Performance vs Efficiency)."""
+    models = []
+    roc_aucs = []
+    training_times = []
+    
+    for row in summary_rows:
+        try:
+            auc = float(row.get("roc_auc", float("nan")))
+            time = float(row.get("training_sec", float("nan")))
+            if not (np.isnan(auc) or np.isnan(time)):
+                models.append(str(row["model"]))
+                roc_aucs.append(auc)
+                training_times.append(time)
+        except Exception:
+            continue
+    
+    if not models:
+        return
+    
+    plt.figure(figsize=(10, 8))
+    plt.scatter(training_times, roc_aucs, s=100, alpha=0.6)
+    
+    # Add model labels
+    for i, model in enumerate(models):
+        plt.annotate(model, (training_times[i], roc_aucs[i]), 
+                    xytext=(5, 5), textcoords='offset points', fontsize=8)
+    
+    plt.xlabel("Training Time (seconds)", fontsize=12)
+    plt.ylabel("ROC-AUC", fontsize=12)
+    plt.title("Performance vs Efficiency (Training Time vs ROC-AUC)", fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def plot_model_heatmap(summary_rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Heatmap showing all metrics across all models."""
+    if pd is None:
+        return
+    
+    # Select key metrics for heatmap
+    metrics = ["roc_auc", "pr_auc", "f1", "accuracy", "recall", "precision"]
+    metric_labels = ["ROC-AUC", "PR-AUC", "F1", "Accuracy", "Recall", "Precision"]
+    
+    # Build data matrix
+    models = []
+    data_matrix = []
+    
+    for row in summary_rows:
+        model_name = str(row["model"])
+        models.append(model_name)
+        row_data = []
+        for metric in metrics:
+            try:
+                val = float(row.get(metric, float("nan")))
+                row_data.append(val if not np.isnan(val) else 0.0)
+            except Exception:
+                row_data.append(0.0)
+        data_matrix.append(row_data)
+    
+    if not models or not data_matrix:
+        return
+    
+    # Create DataFrame
+    df = pd.DataFrame(data_matrix, index=models, columns=metric_labels)
+    
+    # Plot heatmap
+    plt.figure(figsize=(10, max(6, len(models) * 0.5)))
+    
+    # Try seaborn, fallback to matplotlib
+    try:
+        import seaborn as sns
+        sns.heatmap(df, annot=True, fmt='.4f', cmap='YlOrRd', cbar_kws={'label': 'Score'}, 
+                   linewidths=0.5, linecolor='gray')
+    except ImportError:
+        # Fallback if seaborn not available
+        plt.imshow(df.values, aspect='auto', cmap='YlOrRd', interpolation='nearest')
+        plt.xticks(range(len(metric_labels)), metric_labels, rotation=45, ha='right')
+        plt.yticks(range(len(models)), models)
+        for i in range(len(models)):
+            for j in range(len(metric_labels)):
+                plt.text(j, i, f'{df.values[i, j]:.4f}', ha='center', va='center', fontsize=8)
+        plt.colorbar(label='Score')
+    
+    plt.title("Model Comparison Heatmap", fontsize=14, fontweight='bold', pad=20)
+    plt.xlabel("Metrics", fontsize=12)
+    plt.ylabel("Models", fontsize=12)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def plot_f1_vs_fpr(summary_rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Scatter plot of F1 vs FPR for threshold selection analysis."""
+    models = []
+    f1_scores = []
+    fprs = []
+    
+    for row in summary_rows:
+        try:
+            f1 = float(row.get("f1", float("nan")))
+            fpr = float(row.get("fpr", float("nan")))
+            if not (np.isnan(f1) or np.isnan(fpr)):
+                models.append(str(row["model"]))
+                f1_scores.append(f1)
+                fprs.append(fpr)
+        except Exception:
+            continue
+    
+    if not models:
+        return
+    
+    plt.figure(figsize=(10, 8))
+    plt.scatter(fprs, f1_scores, s=100, alpha=0.6)
+    
+    # Add model labels
+    for i, model in enumerate(models):
+        plt.annotate(model, (fprs[i], f1_scores[i]), 
+                    xytext=(5, 5), textcoords='offset points', fontsize=8)
+    
+    plt.xlabel("False Positive Rate (FPR)", fontsize=12)
+    plt.ylabel("F1 Score", fontsize=12)
+    plt.title("F1 Score vs False Positive Rate", fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.xlim(-0.01, max(fprs) * 1.1 if fprs else 0.05)
+    plt.ylim(0, 1.05)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
+def plot_error_analysis(summary_rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Stacked bar chart showing TP, TN, FP, FN proportions."""
+    models = []
+    tps = []
+    tns = []
+    fps = []
+    fns = []
+    
+    for row in summary_rows:
+        try:
+            tp = int(row.get("tp", 0))
+            tn = int(row.get("tn", 0))
+            fp = int(row.get("fp", 0))
+            fn = int(row.get("fn", 0))
+            total = tp + tn + fp + fn
+            if total > 0:
+                models.append(str(row["model"]))
+                tps.append(tp / total)
+                tns.append(tn / total)
+                fps.append(fp / total)
+                fns.append(fn / total)
+        except Exception:
+            continue
+    
+    if not models:
+        return
+    
+    x = np.arange(len(models))
+    width = 0.6
+    
+    plt.figure(figsize=(12, 6))
+    p1 = plt.bar(x, tns, width, label='True Negatives (TN)', color='green', alpha=0.7)
+    p2 = plt.bar(x, tps, width, bottom=tns, label='True Positives (TP)', color='blue', alpha=0.7)
+    p3 = plt.bar(x, fps, width, bottom=np.array(tns) + np.array(tps), label='False Positives (FP)', color='orange', alpha=0.7)
+    p4 = plt.bar(x, fns, width, bottom=np.array(tns) + np.array(tps) + np.array(fps), label='False Negatives (FN)', color='red', alpha=0.7)
+    
+    plt.xlabel("Models", fontsize=12)
+    plt.ylabel("Proportion", fontsize=12)
+    plt.title("Error Analysis - Confusion Matrix Proportions", fontsize=14, fontweight='bold')
+    plt.xticks(x, models, rotation=45, ha='right')
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.ylim(0, 1)
     plt.tight_layout()
     plt.savefig(out_path, dpi=200)
     plt.close()
@@ -289,6 +515,13 @@ def main():
                 top_n=20
             )
 
+    # New comparison plots
+    plot_precision_recall_scatter(summary_rows, plots_dir / "precision_recall_scatter.png")
+    plot_performance_vs_efficiency(summary_rows, plots_dir / "performance_vs_efficiency.png")
+    plot_f1_vs_fpr(summary_rows, plots_dir / "f1_vs_fpr.png")
+    plot_error_analysis(summary_rows, plots_dir / "error_analysis.png")
+    plot_model_heatmap(summary_rows, plots_dir / "model_comparison_heatmap.png")
+
     # Save a short README in reports/
     readme = [
         "# Reports output",
@@ -305,6 +538,13 @@ def main():
         "- timing_breakdown.png",
         "- recall_under_policy.png",
         "- top_features_<model>.png (only if metadata includes top_features)",
+        "",
+        "## New Comparison Plots",
+        "- precision_recall_scatter.png - Precision vs Recall trade-off",
+        "- performance_vs_efficiency.png - Training time vs ROC-AUC",
+        "- f1_vs_fpr.png - F1 score vs False Positive Rate",
+        "- error_analysis.png - Stacked bar chart of TP/TN/FP/FN proportions",
+        "- model_comparison_heatmap.png - Heatmap of all metrics across models",
         "",
         "Note: ROC/PR curves require per-sample scores; this script plots AUC summary values from metadata.",
         "",

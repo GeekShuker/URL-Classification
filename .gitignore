@@ -1,9 +1,33 @@
+# Python
 __pycache__/
-.pytest_cache/
 *.pyc
 *.pyo
 *.pyd
-*.joblib
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# Model artifacts (too large for GitHub)
 artifacts/
+catboost_info/
+
+# Reports and logs (generated files)
+reports/system_logs/
+*.log
+
+# Environment files
+.env
+*.env
+
+# OS
 .DS_Store
+Thumbs.db
