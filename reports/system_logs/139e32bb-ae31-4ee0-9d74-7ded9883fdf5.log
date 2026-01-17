@@ -1,0 +1,8 @@
+==> Running: bash ./tmp_runall.sh
+==> Using repo at: /app
+==> IN_DOCKER=1, using system python
+==> Python: python
+==> Running tests
+....                                                                     [100%]
+4 passed in 4.34s
+==> Training en_bag on balanced_urls.csv

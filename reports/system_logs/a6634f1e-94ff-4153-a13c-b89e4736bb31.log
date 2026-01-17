@@ -1,0 +1,43 @@
+==> Running: bash ./tmp_runall.sh
+==> Using repo at: /app
+==> IN_DOCKER=1, using system python
+==> Python: python
+==> Running tests
+....                                                                     [100%]
+4 passed in 4.13s
+==> Training en_bag on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9757317049070177,
+    "precision": 0.9987458278547587,
+    "fpr": 0.0012252722278215846,
+    "accuracy": 0.9872532163395981,
+    "f1": 0.9871046423287617,
+    "auc": 0.9948991822274442
+  },
+  "test_metrics": {
+    "recall": 0.9754786485589161,
+    "precision": 0.9982688045043442,
+    "fpr": 0.0016916728589271316,
+    "accuracy": 0.9868934878499944,
+    "f1": 0.9867421516416384,
+    "auc": 0.9942632227863091
+  },
+  "test_confusion": {
+    "tn": 63144,
+    "fp": 107,
+    "fn": 1551,
+    "tp": 61700
+  },
+  "test_auc": {
+    "roc_auc": 0.9942632227863091,
+    "pr_auc": 0.995609243355916
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63144        107
+    Actual 1       1551      61700
+==> Training en_knn on balanced_urls.csv

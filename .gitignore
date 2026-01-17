@@ -21,7 +21,7 @@ ENV/
 # catboost_info/ - removed, now tracked with LFS
 
 # Reports and logs (generated files)
-reports/system_logs/
+# reports/system_logs/ - now tracked in Git
 *.log
 
 # Environment files

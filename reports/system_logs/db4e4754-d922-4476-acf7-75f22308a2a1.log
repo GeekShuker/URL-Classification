@@ -1,0 +1,241 @@
+==> Running: bash ./tmp_runall.sh
+==> Using repo at: /app
+==> IN_DOCKER=1, using system python
+==> Python: python
+==> Running tests
+....                                                                     [100%]
+4 passed in 13.88s
+==> Training en_bag on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9757317049070177,
+    "precision": 0.9987458278547587,
+    "fpr": 0.0012252722278215846,
+    "accuracy": 0.9872532163395981,
+    "f1": 0.9871046423287617,
+    "auc": 0.9948991822274442
+  },
+  "test_metrics": {
+    "recall": 0.9754786485589161,
+    "precision": 0.9982688045043442,
+    "fpr": 0.0016916728589271316,
+    "accuracy": 0.9868934878499944,
+    "f1": 0.9867421516416384,
+    "auc": 0.9942632227863091
+  },
+  "test_confusion": {
+    "tn": 63144,
+    "fp": 107,
+    "fn": 1551,
+    "tp": 61700
+  },
+  "test_auc": {
+    "roc_auc": 0.9942632227863091,
+    "pr_auc": 0.995609243355916
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63144        107
+    Actual 1       1551      61700
+==> Training en_knn on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9896839983399538,
+    "precision": 0.997828166095481,
+    "fpr": 0.0021541076263314955,
+    "accuracy": 0.9937649453568111,
+    "f1": 0.993739396164264,
+    "auc": 0.9975628585984575
+  },
+  "test_metrics": {
+    "recall": 0.9883480103081375,
+    "precision": 0.997781431056773,
+    "fpr": 0.0021975937139333767,
+    "accuracy": 0.993075208297102,
+    "f1": 0.9930423179565383,
+    "auc": 0.9970928001409026
+  },
+  "test_confusion": {
+    "tn": 63112,
+    "fp": 139,
+    "fn": 737,
+    "tp": 62514
+  },
+  "test_auc": {
+    "roc_auc": 0.9970928001409026,
+    "pr_auc": 0.9969566041365497
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63112        139
+    Actual 1        737      62514
+==> Training rfe_xgb on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.990316396909152,
+    "precision": 0.9987045599489796,
+    "fpr": 0.0012845595936839193,
+    "accuracy": 0.994515918657734,
+    "f1": 0.9944927910138226,
+    "auc": 0.99908678092873
+  },
+  "test_metrics": {
+    "recall": 0.9897867227395615,
+    "precision": 0.998500773537058,
+    "fpr": 0.0014861425115808445,
+    "accuracy": 0.9941502901139903,
+    "f1": 0.9941246526399364,
+    "auc": 0.9989618297000937
+  },
+  "test_confusion": {
+    "tn": 63157,
+    "fp": 94,
+    "fn": 646,
+    "tp": 62605
+  },
+  "test_auc": {
+    "roc_auc": 0.9989618297000937,
+    "pr_auc": 0.9991999890055856
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63157         94
+    Actual 1        646      62605
+==> Training rf on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9905337839173138,
+    "precision": 0.9988043521581443,
+    "fpr": 0.0011857473172466946,
+    "accuracy": 0.9946740183000335,
+    "f1": 0.994651875812389,
+    "auc": 0.9992353430314683
+  },
+  "test_metrics": {
+    "recall": 0.9892333718043983,
+    "precision": 0.9982769073678165,
+    "fpr": 0.0017074828856460768,
+    "accuracy": 0.9937629444593762,
+    "f1": 0.9937345647150378,
+    "auc": 0.9990048492899587
+  },
+  "test_confusion": {
+    "tn": 63143,
+    "fp": 108,
+    "fn": 681,
+    "tp": 62570
+  },
+  "test_auc": {
+    "roc_auc": 0.9990048492899587,
+    "pr_auc": 0.9991149903015432
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63143        108
+    Actual 1        681      62570
+==> Training xgb on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9902175846327148,
+    "precision": 0.998803970816888,
+    "fpr": 0.0011857473172466946,
+    "accuracy": 0.994515918657734,
+    "f1": 0.9944922444848016,
+    "auc": 0.999116164111717
+  },
+  "test_metrics": {
+    "recall": 0.9897709127128425,
+    "precision": 0.998452975231655,
+    "fpr": 0.00153357259173768,
+    "accuracy": 0.9941186700605524,
+    "f1": 0.994092987804878,
+    "auc": 0.9989195653551376
+  },
+  "test_confusion": {
+    "tn": 63154,
+    "fp": 97,
+    "fn": 647,
+    "tp": 62604
+  },
+  "test_auc": {
+    "roc_auc": 0.9989195653551376,
+    "pr_auc": 0.9991601007695142
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63154         97
+    Actual 1        647      62604
+==> Training catboost on balanced_urls.csv
+{
+  "val_metrics": {
+    "recall": 0.9878658524535088,
+    "precision": 0.9985218033998522,
+    "fpr": 0.0014624216912709235,
+    "accuracy": 0.9932017153811189,
+    "f1": 0.9931652460710098,
+    "auc": 0.9988009644517163
+  },
+  "test_metrics": {
+    "recall": 0.9871306382507786,
+    "precision": 0.9981136599792183,
+    "fpr": 0.0018655831528355284,
+    "accuracy": 0.9926325275489716,
+    "f1": 0.9925917682781425,
+    "auc": 0.9985194122816047
+  },
+  "test_confusion": {
+    "tn": 63133,
+    "fp": 118,
+    "fn": 814,
+    "tp": 62437
+  },
+  "test_auc": {
+    "roc_auc": 0.9985194122816047,
+    "pr_auc": 0.998890456202884
+  },
+  "threshold": 0.55
+}
+
+Confusion Matrix (TEST) (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0      63133        118
+    Actual 1        814      62437
+==> Creating external subset: mode=stratified, out=reports/tmp_external_sample.csv (n=0, seed=42)
+Wrote FULL dataset (235795) to reports/tmp_external_sample.csv
+Label dist: {0: 0.5718950783519583, 1: 0.42810492164804176}
+==> Evaluating on external subset (all models, same data)
+====================================
+Evaluation
+====================================
+modeldir   : artifacts/en_bag
+data       : reports/tmp_external_sample.csv
+split      : external
+n_samples  : 235795
+threshold  : 0.55
+------------------------------------
+Recall     : 0.630125
+Precision  : 0.999780
+Accuracy   : 0.841595
+FPR        : 0.000104
+AUC        : 0.8332100774855956
+------------------------------------
+Confusion Matrix (Actual x Pred)
+                 Pred 0     Pred 1
+    Actual 0     134836         14
+    Actual 1      37337      63608
+====================================
