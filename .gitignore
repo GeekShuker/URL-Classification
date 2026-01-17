@@ -16,9 +16,9 @@ ENV/
 *.swp
 *.swo
 
-# Model artifacts (too large for GitHub)
-artifacts/
-catboost_info/
+# Model artifacts are now tracked with Git LFS
+# artifacts/ - removed, now tracked with LFS
+# catboost_info/ - removed, now tracked with LFS
 
 # Reports and logs (generated files)
 reports/system_logs/

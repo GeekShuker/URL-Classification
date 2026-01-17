@@ -1,0 +1,198 @@
+{
+  "model": "catboost",
+  "params": {
+    "data": "balanced_urls.csv",
+    "url_col": "url",
+    "label_col": "label",
+    "benign_value": 0,
+    "sample_size": 0,
+    "model": "catboost",
+    "max_fpr": 0.01,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "random_state": 42,
+    "outdir": "artifacts/catboost",
+    "bag_n_estimators": 200,
+    "bag_max_depth": 8,
+    "bag_min_samples_leaf": 1,
+    "knn_ks": "3,5,7,9",
+    "rfe_k": 20,
+    "xgb_n_estimators": 200,
+    "xgb_max_depth": 6,
+    "xgb_learning_rate": 0.1,
+    "xgb_subsample": 0.8,
+    "xgb_colsample_bytree": 0.8,
+    "plain_xgb_n_estimators": 200,
+    "plain_xgb_max_depth": 6,
+    "plain_xgb_learning_rate": 0.1,
+    "plain_xgb_subsample": 0.8,
+    "plain_xgb_colsample_bytree": 0.8,
+    "catboost_iterations": 200,
+    "catboost_depth": 6,
+    "catboost_learning_rate": 0.1,
+    "catboost_subsample": 0.8,
+    "catboost_l2_leaf_reg": 3.0,
+    "rf_n_estimators": 200,
+    "rf_max_depth": 0,
+    "rf_min_samples_split": 2,
+    "rf_min_samples_leaf": 1,
+    "rf_max_features": "sqrt"
+  },
+  "max_fpr": 0.01,
+  "val_metrics": {
+    "recall": 0.993557439576293,
+    "precision": 0.9901136341256869,
+    "fpr": 0.009920752554297346,
+    "tp": 50275,
+    "fp": 502,
+    "fn": 326,
+    "tn": 50099,
+    "threshold": 0.10559497805930863
+  },
+  "test_metrics": {
+    "recall": 0.9928538679230368,
+    "precision": 0.9885091847817532,
+    "fpr": 0.011541319504829964,
+    "accuracy": 0.9906562742091034,
+    "f1": 0.9906767628963559,
+    "auc": 0.9985194122816047
+  },
+  "timestamp": "2026-01-04T14:07:39.964733+00:00",
+  "feature_columns": [
+    "url_len",
+    "host_len",
+    "path_len",
+    "query_len",
+    "dot_count",
+    "dash_count",
+    "underscore_count",
+    "slash_count",
+    "at_count",
+    "qmark_count",
+    "eq_count",
+    "amp_count",
+    "percent_count",
+    "digit_count",
+    "alpha_count",
+    "has_https",
+    "has_ip_host",
+    "port_present",
+    "subdomain_count",
+    "token_count",
+    "avg_token_len",
+    "max_token_len",
+    "shannon_entropy",
+    "suspicious_keyword_hits"
+  ],
+  "selected_features": null,
+  "splits": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "sample_size": 0,
+  "n_samples": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "test_confusion": {
+    "tn": 62521,
+    "fp": 730,
+    "fn": 452,
+    "tp": 62799
+  },
+  "test_auc": {
+    "roc_auc": 0.9985194122816047,
+    "pr_auc": 0.998890456202884
+  },
+  "random_state": 42,
+  "timing": {
+    "feature_extraction_sec": 42.96326459990814,
+    "training_sec": 7.673808100167662,
+    "total_sec": 95.78837439999916
+  },
+  "top_features": [
+    [
+      "has_https",
+      74.39889515742998
+    ],
+    [
+      "subdomain_count",
+      4.108742633549468
+    ],
+    [
+      "host_len",
+      3.49217415396886
+    ],
+    [
+      "digit_count",
+      2.8171420283643447
+    ],
+    [
+      "slash_count",
+      2.569065174838059
+    ],
+    [
+      "max_token_len",
+      2.2125069651879143
+    ],
+    [
+      "shannon_entropy",
+      1.665323431580031
+    ],
+    [
+      "dash_count",
+      1.5104045068441978
+    ],
+    [
+      "path_len",
+      1.376184166053727
+    ],
+    [
+      "token_count",
+      1.2649296636166736
+    ],
+    [
+      "dot_count",
+      0.885207633051927
+    ],
+    [
+      "avg_token_len",
+      0.8613230281477362
+    ],
+    [
+      "alpha_count",
+      0.8144503412904116
+    ],
+    [
+      "underscore_count",
+      0.7664727753991945
+    ],
+    [
+      "url_len",
+      0.3926800206608027
+    ],
+    [
+      "suspicious_keyword_hits",
+      0.2967041484672031
+    ],
+    [
+      "eq_count",
+      0.20476794222743278
+    ],
+    [
+      "query_len",
+      0.09888341972257139
+    ],
+    [
+      "has_ip_host",
+      0.0734842979544775
+    ],
+    [
+      "qmark_count",
+      0.07320302847484143
+    ]
+  ],
+  "threshold": 0.10559497805930863
+}

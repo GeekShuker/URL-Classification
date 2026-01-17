@@ -1,0 +1,198 @@
+{
+  "model": "xgb",
+  "params": {
+    "data": "balanced_urls.csv",
+    "url_col": "url",
+    "label_col": "label",
+    "benign_value": 0,
+    "sample_size": 0,
+    "model": "xgb",
+    "max_fpr": 0.01,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "random_state": 42,
+    "outdir": "artifacts/xgb",
+    "bag_n_estimators": 200,
+    "bag_max_depth": 8,
+    "bag_min_samples_leaf": 1,
+    "knn_ks": "3,5,7,9",
+    "rfe_k": 20,
+    "xgb_n_estimators": 200,
+    "xgb_max_depth": 6,
+    "xgb_learning_rate": 0.1,
+    "xgb_subsample": 0.8,
+    "xgb_colsample_bytree": 0.8,
+    "plain_xgb_n_estimators": 200,
+    "plain_xgb_max_depth": 6,
+    "plain_xgb_learning_rate": 0.1,
+    "plain_xgb_subsample": 0.8,
+    "plain_xgb_colsample_bytree": 0.8,
+    "catboost_iterations": 200,
+    "catboost_depth": 6,
+    "catboost_learning_rate": 0.1,
+    "catboost_subsample": 0.8,
+    "catboost_l2_leaf_reg": 3.0,
+    "rf_n_estimators": 200,
+    "rf_max_depth": 0,
+    "rf_min_samples_split": 2,
+    "rf_min_samples_leaf": 1,
+    "rf_max_features": "sqrt"
+  },
+  "max_fpr": 0.01,
+  "val_metrics": {
+    "recall": 0.9948815240805517,
+    "precision": 0.99004877281309,
+    "fpr": 0.009999802375447125,
+    "tp": 50342,
+    "fp": 506,
+    "fn": 259,
+    "tn": 50095,
+    "threshold": 0.11255771666765213
+  },
+  "test_metrics": {
+    "recall": 0.9939289497399251,
+    "precision": 0.9886458349714573,
+    "fpr": 0.011414839291078402,
+    "accuracy": 0.9912570552244233,
+    "f1": 0.9912803532008829,
+    "auc": 0.998941153386594
+  },
+  "timestamp": "2026-01-04T14:06:02.442682+00:00",
+  "feature_columns": [
+    "url_len",
+    "host_len",
+    "path_len",
+    "query_len",
+    "dot_count",
+    "dash_count",
+    "underscore_count",
+    "slash_count",
+    "at_count",
+    "qmark_count",
+    "eq_count",
+    "amp_count",
+    "percent_count",
+    "digit_count",
+    "alpha_count",
+    "has_https",
+    "has_ip_host",
+    "port_present",
+    "subdomain_count",
+    "token_count",
+    "avg_token_len",
+    "max_token_len",
+    "shannon_entropy",
+    "suspicious_keyword_hits"
+  ],
+  "selected_features": null,
+  "splits": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "sample_size": 0,
+  "n_samples": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "test_confusion": {
+    "tn": 62529,
+    "fp": 722,
+    "fn": 384,
+    "tp": 62867
+  },
+  "test_auc": {
+    "roc_auc": 0.998941153386594,
+    "pr_auc": 0.9991833919806672
+  },
+  "random_state": 42,
+  "timing": {
+    "feature_extraction_sec": 38.37041349988431,
+    "training_sec": 2.617971000028774,
+    "total_sec": 73.0537121000234
+  },
+  "top_features": [
+    [
+      "has_https",
+      0.8569985628128052
+    ],
+    [
+      "has_ip_host",
+      0.04348171502351761
+    ],
+    [
+      "subdomain_count",
+      0.03871266916394234
+    ],
+    [
+      "amp_count",
+      0.01445861253887415
+    ],
+    [
+      "suspicious_keyword_hits",
+      0.008247079327702522
+    ],
+    [
+      "query_len",
+      0.007457709405571222
+    ],
+    [
+      "underscore_count",
+      0.003864347469061613
+    ],
+    [
+      "dot_count",
+      0.003502477426081896
+    ],
+    [
+      "digit_count",
+      0.00252148462459445
+    ],
+    [
+      "dash_count",
+      0.002233372302725911
+    ],
+    [
+      "path_len",
+      0.002090447349473834
+    ],
+    [
+      "at_count",
+      0.0019192845793440938
+    ],
+    [
+      "max_token_len",
+      0.0017454992048442364
+    ],
+    [
+      "eq_count",
+      0.001610920880921185
+    ],
+    [
+      "host_len",
+      0.001593359629623592
+    ],
+    [
+      "slash_count",
+      0.0014622639864683151
+    ],
+    [
+      "avg_token_len",
+      0.0014471757458522916
+    ],
+    [
+      "shannon_entropy",
+      0.0013879942707717419
+    ],
+    [
+      "token_count",
+      0.0010306769981980324
+    ],
+    [
+      "percent_count",
+      0.0010111129377037287
+    ]
+  ],
+  "threshold": 0.11255771666765213
+}

@@ -1,0 +1,1 @@
+["url_len", "host_len", "path_len", "query_len", "dot_count", "dash_count", "underscore_count", "slash_count", "at_count", "qmark_count", "eq_count", "amp_count", "percent_count", "digit_count", "alpha_count", "has_https", "has_ip_host", "port_present", "subdomain_count", "token_count", "avg_token_len", "max_token_len", "shannon_entropy", "suspicious_keyword_hits"]

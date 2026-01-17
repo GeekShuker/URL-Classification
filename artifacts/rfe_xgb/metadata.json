@@ -1,0 +1,219 @@
+{
+  "model": "rfe_xgb",
+  "params": {
+    "data": "balanced_urls.csv",
+    "url_col": "url",
+    "label_col": "label",
+    "benign_value": 0,
+    "sample_size": 0,
+    "model": "rfe_xgb",
+    "max_fpr": 0.01,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "random_state": 42,
+    "outdir": "artifacts/rfe_xgb",
+    "bag_n_estimators": 200,
+    "bag_max_depth": 8,
+    "bag_min_samples_leaf": 1,
+    "knn_ks": "3,5,7,9",
+    "rfe_k": 20,
+    "xgb_n_estimators": 200,
+    "xgb_max_depth": 6,
+    "xgb_learning_rate": 0.1,
+    "xgb_subsample": 0.8,
+    "xgb_colsample_bytree": 0.8,
+    "plain_xgb_n_estimators": 200,
+    "plain_xgb_max_depth": 6,
+    "plain_xgb_learning_rate": 0.1,
+    "plain_xgb_subsample": 0.8,
+    "plain_xgb_colsample_bytree": 0.8,
+    "catboost_iterations": 200,
+    "catboost_depth": 6,
+    "catboost_learning_rate": 0.1,
+    "catboost_subsample": 0.8,
+    "catboost_l2_leaf_reg": 3.0,
+    "rf_n_estimators": 200,
+    "rf_max_depth": 0,
+    "rf_min_samples_split": 2,
+    "rf_min_samples_leaf": 1,
+    "rf_max_features": "sqrt"
+  },
+  "max_fpr": 0.01,
+  "val_metrics": {
+    "recall": 0.9947827118041146,
+    "precision": 0.9900672672200149,
+    "fpr": 0.00998003992015968,
+    "tp": 50337,
+    "fp": 505,
+    "fn": 264,
+    "tn": 50096,
+    "threshold": 0.11178384721279144
+  },
+  "test_metrics": {
+    "recall": 0.9939131397132062,
+    "precision": 0.9889411505608079,
+    "fpr": 0.011114448783418444,
+    "accuracy": 0.9913993454648938,
+    "f1": 0.9914209115281502,
+    "auc": 0.9989287391499493
+  },
+  "timestamp": "2026-01-04T14:03:39.791165+00:00",
+  "feature_columns": [
+    "url_len",
+    "host_len",
+    "path_len",
+    "query_len",
+    "dot_count",
+    "dash_count",
+    "underscore_count",
+    "slash_count",
+    "at_count",
+    "qmark_count",
+    "eq_count",
+    "amp_count",
+    "percent_count",
+    "digit_count",
+    "alpha_count",
+    "has_https",
+    "has_ip_host",
+    "port_present",
+    "subdomain_count",
+    "token_count",
+    "avg_token_len",
+    "max_token_len",
+    "shannon_entropy",
+    "suspicious_keyword_hits"
+  ],
+  "selected_features": [
+    "url_len",
+    "host_len",
+    "path_len",
+    "query_len",
+    "dot_count",
+    "dash_count",
+    "underscore_count",
+    "slash_count",
+    "at_count",
+    "eq_count",
+    "percent_count",
+    "digit_count",
+    "alpha_count",
+    "has_https",
+    "subdomain_count",
+    "token_count",
+    "avg_token_len",
+    "max_token_len",
+    "shannon_entropy",
+    "suspicious_keyword_hits"
+  ],
+  "splits": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "sample_size": 0,
+  "n_samples": {
+    "train": 404804,
+    "val": 101202,
+    "test": 126502
+  },
+  "test_confusion": {
+    "tn": 62548,
+    "fp": 703,
+    "fn": 385,
+    "tp": 62866
+  },
+  "test_auc": {
+    "roc_auc": 0.9989287391499493,
+    "pr_auc": 0.9991795626462956
+  },
+  "random_state": 42,
+  "timing": {
+    "feature_extraction_sec": 33.21605509985238,
+    "training_sec": 15.764302799943835,
+    "total_sec": 71.54195909993723
+  },
+  "top_features": [
+    [
+      "has_https",
+      0.92618328332901
+    ],
+    [
+      "subdomain_count",
+      0.030223561450839043
+    ],
+    [
+      "suspicious_keyword_hits",
+      0.007192549761384726
+    ],
+    [
+      "query_len",
+      0.00622518640011549
+    ],
+    [
+      "dot_count",
+      0.004164380952715874
+    ],
+    [
+      "underscore_count",
+      0.002953887451440096
+    ],
+    [
+      "digit_count",
+      0.00274086045101285
+    ],
+    [
+      "dash_count",
+      0.0022262982092797756
+    ],
+    [
+      "at_count",
+      0.002131657674908638
+    ],
+    [
+      "eq_count",
+      0.0020894394256174564
+    ],
+    [
+      "token_count",
+      0.0020533432252705097
+    ],
+    [
+      "max_token_len",
+      0.0017724462086334825
+    ],
+    [
+      "path_len",
+      0.001715365331619978
+    ],
+    [
+      "host_len",
+      0.0016713518416509032
+    ],
+    [
+      "slash_count",
+      0.001363500952720642
+    ],
+    [
+      "shannon_entropy",
+      0.001300621428526938
+    ],
+    [
+      "avg_token_len",
+      0.00127737398725003
+    ],
+    [
+      "alpha_count",
+      0.0009656488546170294
+    ],
+    [
+      "url_len",
+      0.000891836010850966
+    ],
+    [
+      "percent_count",
+      0.000857413571793586
+    ]
+  ],
+  "threshold": 0.11178384721279144
+}
