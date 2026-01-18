@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -21,7 +21,7 @@ SEED="${SEED:-42}"
 URL_COL="${URL_COL:-url}"
 LABEL_COL="${LABEL_COL:-label}"
 SAMPLE_MODE="${SAMPLE_MODE:-stratified}"       # stratified | balanced
-THRESHOLD="${THRESHOLD:-0.7775}"
+THRESHOLD="${THRESHOLD:-0.55}"
 RFE_K="${RFE_K:-20}"
 RESULTS_CSV="${RESULTS_CSV:-reports/rfe_runs.csv}"
 

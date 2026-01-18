@@ -8,6 +8,7 @@
     "sample_size": 0,
     "model": "rfe_xgb",
     "max_fpr": 0.01,
+    "fixed_threshold": null,
     "test_size": 0.2,
     "val_size": 0.2,
     "random_state": 42,
@@ -57,7 +58,7 @@
     "f1": 0.9914209115281502,
     "auc": 0.9989287391499493
   },
-  "timestamp": "2026-01-04T14:03:39.791165+00:00",
+  "timestamp": "2026-01-18T12:40:18.336299+00:00",
   "feature_columns": [
     "url_len",
     "host_len",
@@ -129,9 +130,9 @@
   },
   "random_state": 42,
   "timing": {
-    "feature_extraction_sec": 33.21605509985238,
-    "training_sec": 15.764302799943835,
-    "total_sec": 71.54195909993723
+    "feature_extraction_sec": 108.67165960004786,
+    "training_sec": 39.0263253999874,
+    "total_sec": 205.00082939997083
   },
   "top_features": [
     [

@@ -3,3 +3,4 @@
 # Python files should also use LF
 *.py text eol=lf
 *.joblib filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
